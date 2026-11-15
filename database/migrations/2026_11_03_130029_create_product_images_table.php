@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('product_images', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
+            $table->string('image_url');                       // VARCHAR(255)
+            $table->unsignedInteger('sort_order')->default(0); // 0 = ảnh khung lớn mặc định
         });
     }
 

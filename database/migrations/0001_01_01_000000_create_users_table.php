@@ -13,10 +13,13 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            $table->string('full_name', 150);
+            $table->string('email', 150)->unique();          // BR1-UC01: email duy nhất
+            $table->string('password');                      // VARCHAR(255), Bcrypt (BR2-UC01)
+            $table->string('phone', 20)->nullable();
+            $table->string('default_address')->nullable();   // tự điền khi Checkout (BR3-UC02)
+            $table->enum('role', ['customer', 'admin'])->default('customer');
+            $table->boolean('is_locked')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });
