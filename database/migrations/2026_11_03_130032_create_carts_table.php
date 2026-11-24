@@ -13,7 +13,11 @@ return new class extends Migration
     {
         Schema::create('carts', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnDelete(); // NULL = giỏ của Guest
+            $table->string('session_token', 100)->nullable()->unique();                        // token trong Cookie của Guest
             $table->timestamps();
+
+            $table->unique('user_id'); // mỗi tài khoản chỉ có 1 giỏ (MySQL cho phép nhiều NULL)
         });
     }
 

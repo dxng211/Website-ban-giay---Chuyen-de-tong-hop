@@ -13,7 +13,14 @@ return new class extends Migration
     {
         Schema::create('product_variants', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
+            $table->string('size', 20);                        // 'Mặc định' với sản phẩm không có size
+            $table->string('variant_sku', 60)->unique();
+            $table->unsignedInteger('stock_quantity')->default(0);
             $table->timestamps();
+
+            $table->unique(['product_id', 'size']);
+            $table->index('size');
         });
     }
 

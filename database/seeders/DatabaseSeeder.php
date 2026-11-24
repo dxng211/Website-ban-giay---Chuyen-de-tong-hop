@@ -2,24 +2,22 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
-     * Seed the application's database.
+     * Thứ tự quan trọng vì có khóa ngoại:
+     * người dùng -> bảng size -> danh mục (cần bảng size) -> sản phẩm (cần danh mục) -> đánh giá (cần sản phẩm, người dùng)
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            UserSeeder::class,
+            SizeChartSeeder::class,
+            CategorySeeder::class,
+            ProductSeeder::class,
+            ReviewSeeder::class,
         ]);
     }
 }

@@ -1,4 +1,4 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<!-- <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
@@ -56,4 +56,61 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT). -->
+
+# Huce Store - Website bán giày
+
+Đồ án Chuyên đề tổng hợp. Laravel (monolith, kiến trúc 3 tầng Controller - Service - Repository/Model),
+MySQL, Blade + TailwindCSS, chatbot tư vấn size bằng Google Gemini, mã QR chuyển khoản VietQR.
+
+## Yêu cầu
+- PHP 8.2 trở lên, Composer
+- MySQL 8 hoặc MariaDB (XAMPP, Laragon...)
+- Node.js 18 trở lên (nếu giao diện dùng Vite)
+
+## Cài đặt
+```bash
+git clone <địa-chỉ-repo>
+cd Website-ban-giay---Chuyen-de-tong-hop
+
+composer install
+cp .env.example .env          # CMD (Windows): copy .env.example .env
+php artisan key:generate
+
+# Tạo sẵn CSDL rỗng tên "shoe_store" trong MySQL, rồi chỉnh DB_* trong .env nếu khác
+php artisan migrate --seed    # tạo bảng + dữ liệu mẫu
+php artisan storage:link      # liên kết thư mục ảnh sản phẩm
+
+npm install && npm run dev    # nếu dùng Vite (hoặc npm run build)
+php artisan serve             # mở http://localhost:8000
+```
+Xóa và tạo lại toàn bộ dữ liệu: `php artisan migrate:fresh --seed`.
+
+## Tài khoản mẫu (chỉ dùng khi phát triển)
+| Vai trò | Email | Mật khẩu |
+|---|---|---|
+| Admin | admin@hucestore.com | Admin@123 |
+| Khách hàng | khach1@example.com | Customer@123 |
+| Khách hàng | khach2@example.com | Customer@123 |
+| Bị khóa (để thử luồng khóa tài khoản) | khoa@example.com | Customer@123 |
+
+## Cấu hình khóa dịch vụ ngoài
+Điền vào file `.env` của riêng bạn (không commit): `GEMINI_API_KEY`, `GEMINI_MODEL`,
+`VIETQR_BANK_ID`, `VIETQR_ACCOUNT_NO`, `VIETQR_ACCOUNT_NAME`, `VIETQR_TEMPLATE`.
+Chưa có khóa thì các chức năng khác vẫn chạy bình thường.
+
+## Cấu trúc code
+```
+app/Http/Controllers   Tầng Controller (nhận request, gọi Service)
+app/Services           Tầng Service (nghiệp vụ); Services/Clients: Gemini, VietQR
+app/Repositories       Tầng Repository (truy vấn phức tạp: Product, Cart, Order, Review)
+app/Models, app/Enums  Model Eloquent, Enum
+routes/web.php         Route khách hàng; routes/admin.php: route quản trị (/admin)
+```
+
+## Quy ước làm việc nhóm
+- Không commit trực tiếp lên `main`: tạo nhánh theo module (`feature/cart`, `feature/order-payment`...), mở Pull Request cho người còn lại xem.
+- Trước mỗi buổi code: `git pull origin main`.
+- Cần thêm hoặc sửa cột: **tạo migration mới** (`php artisan make:migration ...`), không sửa migration đã push.
+- Không commit file `.env` và thư mục `vendor/`, `node_modules/`.
+- Tên hàm trong Controller, Service, Repository đã khai báo sẵn theo Class Diagram, hãy code vào đúng hàm đó.

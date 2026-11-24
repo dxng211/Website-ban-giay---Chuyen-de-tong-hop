@@ -13,7 +13,12 @@ return new class extends Migration
     {
         Schema::create('cart_items', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            $table->foreignId('cart_id')->constrained('carts')->cascadeOnDelete();
+            $table->foreignId('product_variant_id')->constrained('product_variants')->cascadeOnDelete();
+            $table->unsignedInteger('quantity');               // validate 1 <= quantity <= stock_quantity ở Service
+            $table->timestamp('created_at')->useCurrent();
+
+            $table->unique(['cart_id', 'product_variant_id']);
         });
     }
 
