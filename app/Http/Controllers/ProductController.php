@@ -22,6 +22,11 @@ class ProductController extends Controller
     public function home(): View
     {
         // TODO: lấy sản phẩm bán chạy và mới nhất từ $this->productService->getHomeData()
+        return view('home.index', [
+        'featuredCategories' => [],
+        'bestSellerProducts' => [],
+        'newestProducts' => [],
+    ]);
     }
 
     /**
