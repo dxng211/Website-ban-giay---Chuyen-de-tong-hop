@@ -16,46 +16,22 @@
             <nav>
                 <ul id="MenuItems">
                     <li>
-                        @if(request()->routeIs('home'))
-                            <a href="javascript:void(0)" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">Trang chủ</a>
-                        @else
-                            <a href="{{ route('home') }}">Trang chủ</a>
-                        @endif
+                        <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">Trang chủ</a>
                     </li>
                     <li>
-                        @if(request()->routeIs('products.index'))
-                            <a href="javascript:void(0)" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">Sản phẩm</a>
-                        @else
-                            <a href="{{ route('products.index') }}">Sản phẩm</a>
-                        @endif
+                        <a href="{{ route('products.index') }}" class="{{ request()->routeIs('products.*') ? 'active' : '' }}">Sản phẩm</a>
                     </li>
                     <li>
-                        @if(request()->routeIs('accessories.index'))
-                            <a href="javascript:void(0)" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">Phụ kiện</a>
-                        @else
-                            <a href="{{ route('accessories.index') }}">Phụ kiện</a>
-                        @endif
+                        <a href="{{ route('accessories.index') }}" class="{{ request()->routeIs('accessories.*') ? 'active' : '' }}">Phụ kiện</a>
                     </li>
                     <li>
-                        @if(request()->routeIs('about'))
-                            <a href="javascript:void(0)" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">Giới thiệu</a>
-                        @else
-                            <a href="{{ route('about') }}">Giới thiệu</a>
-                        @endif
+                        <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'active' : '' }}">Giới thiệu</a>
                     </li>
                     <li>
-                        @if(request()->routeIs('contact'))
-                            <a href="javascript:void(0)" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">Liên hệ</a>
-                        @else
-                            <a href="{{ route('contact') }}">Liên hệ</a>
-                        @endif
+                        <a href="{{ route('contact') }}" class="{{ request()->routeIs('contact') ? 'active' : '' }}">Liên hệ</a>
                     </li>
                     <li>
-                        @if(request()->routeIs('account'))
-                            <a href="javascript:void(0)" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">Tài khoản</a>
-                        @else
-                            <a href="{{ route('account') }}">Tài khoản</a>
-                        @endif
+                        <a href="{{ route('account') }}" class="{{ request()->routeIs('account*') ? 'active' : '' }}">Tài khoản</a>
                     </li>
                 </ul>
             </nav>
