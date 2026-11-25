@@ -1,17 +1,32 @@
-<div class="categories">
-    <div class="small-container">
-        <div class="row">
-            @forelse($featuredCategories ?? [] as $category)
-                <div class="col-3">
-                    <a href="{{ $category->group_type === 'accessory' ? route('accessories.index', ['category' => $category->id]) : route('products.index', ['category' => $category->id]) }}">
-                        <img src="{{ asset('images/' . ltrim($category->image, '/')) }}" alt="{{ $category->name }}">
-                    </a>
-                </div>
-            @empty
-                <div class="col-3"><img src="{{ asset('images/category-1.jpg') }}" alt="Cat 1"></div>
-                <div class="col-3"><img src="{{ asset('images/category-2.jpg') }}" alt="Cat 2"></div>
-                <div class="col-3"><img src="{{ asset('images/category-3 (2).jpg') }}" alt="Cat 3"></div>
-            @endforelse
+@php
+    $fallbackImages = [
+        'images/category-1.jpg',
+        'images/category-2.jpg',
+        'images/category-3.jpg',
+    ];
+@endphp
+
+@if(!empty($featuredCategories) && count($featuredCategories) > 0)
+    <div class="categories">
+        <div class="small-container">
+            <div class="row">
+                @foreach($featuredCategories as $index => $category)
+                    @php
+                        $catUrl = ($category->group_type ?? 'shoe') === 'accessory'
+                            ? route('accessories.index', ['category' => $category->slug])
+                            : route('products.index', ['category' => $category->slug]);
+
+                        $imgPath = $category->image_url
+                            ?? $category->image
+                            ?? ($fallbackImages[$index % count($fallbackImages)] ?? 'images/category-1.jpg');
+                    @endphp
+                    <div class="col-3">
+                        <a href="{{ $catUrl }}">
+                            <img src="{{ asset(ltrim($imgPath, '/')) }}" alt="{{ $category->name }}">
+                        </a>
+                    </div>
+                @endforeach
+            </div>
         </div>
     </div>
-</div>
+@endif
