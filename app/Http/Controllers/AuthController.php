@@ -7,37 +7,54 @@ use App\Http\Requests\RegisterRequest;
 use App\Services\AuthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    //
     public function __construct(
         private readonly AuthService $authService,
     ) {}
 
-    /**
-     * POST /register
-     */
-    public function register(RegisterRequest $request): RedirectResponse
-    {
-        // TODO: gọi $this->authService->register($request->validated()), truyền cookie cart_token của Guest để gộp giỏ
-        // TODO: chuyển hướng: Admin -> route('admin.dashboard'); Customer -> redirect()->intended(route('account'))
-    }
-
-    /**
-     * POST /login
-     */
     public function login(LoginRequest $request): RedirectResponse
     {
-        // TODO: gọi $this->authService->login(...), truyền cookie cart_token để gộp giỏ; lỗi sai mật khẩu hoặc tài khoản bị khóa -> withErrors
-        // TODO: Guest bấm Thanh toán rồi đăng nhập xong phải quay lại /checkout (redirect()->intended)
+        $guestToken = $request->cookie('cart_session_token');
+        $user = $this->authService->login(
+            $request->string('email')->toString(),
+            $request->string('password')->toString(),
+            $guestToken
+        );
+
+        $request->session()->regenerate();
+
+        $intended = $request->session()->pull('url.intended');
+        if ($intended && ! str_contains($intended, '/admin')) {
+            return redirect()->to($intended)->with('success', 'Đăng nhập thành công.');
+        }
+
+        return redirect()->route('account')->with('success', 'Chào mừng ' . $user->full_name . ' quay trở lại!');
     }
 
-    /**
-     * POST /logout
-     */
+    public function register(RegisterRequest $request): RedirectResponse
+    {
+        $guestToken = $request->cookie('cart_session_token');
+        $this->authService->register($request->validated(), $guestToken);
+
+        $request->session()->regenerate();
+
+        $intended = $request->session()->pull('url.intended');
+        if ($intended && ! str_contains($intended, '/admin')) {
+            return redirect()->to($intended)->with('success', 'Đăng ký tài khoản thành công.');
+        }
+
+        return redirect()->route('account')->with('success', 'Đăng ký tài khoản thành công.');
+    }
+
     public function logout(Request $request): RedirectResponse
     {
-        // TODO: gọi $this->authService->logout(); invalidate session và regenerateToken; chuyển về route('home')
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('account')->with('info', 'Bạn đã đăng xuất.');
     }
 }

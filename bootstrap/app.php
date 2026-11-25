@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\EnsureAccountNotLocked;
+use App\Http\Middleware\EnsureUserHasRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -11,22 +13,32 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware) {
+    ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role'       => \App\Http\Middleware\EnsureUserHasRole::class,
-            'not.locked' => \App\Http\Middleware\EnsureAccountNotLocked::class,
+            'role' => EnsureUserHasRole::class,
+            'not.locked' => EnsureAccountNotLocked::class,
         ]);
 
-        // Guest vào trang cần đăng nhập -> về trang Tài khoản; riêng khu vực /admin/* -> về trang đăng nhập admin
-        $middleware->redirectGuestsTo(fn (Request $request) =>
-            $request->is('admin', 'admin/*') ? route('admin.login') : '/account'
-        );
+        $middleware->redirectGuestsTo(function (Request $request) {
+            if ($request->expectsJson()) {
+                return null;
+            }
 
-        // Đã đăng nhập mà vào route chỉ dành cho Guest (POST /login, POST /register, /admin/login):
-        // Admin -> dashboard admin; Customer -> /account (không bị 403 khi thử vào /admin/login)
-        $middleware->redirectUsersTo(fn (Request $request) =>
-            $request->user()?->isAdmin() ? route('admin.dashboard') : '/account'
-        );
+            if ($request->is('admin') || $request->is('admin/*')) {
+                return route('admin.login');
+            }
+
+            return route('account');
+        });
+
+        $middleware->redirectUsersTo(function (Request $request) {
+            $user = $request->user();
+            $role = $user && is_object($user->role) ? $user->role->value : ($user->role ?? 'customer');
+
+            return $role === 'admin'
+                ? route('admin.dashboard')
+                : route('account');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

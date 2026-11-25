@@ -8,6 +8,7 @@ use App\Services\UserService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -21,8 +22,21 @@ class UserController extends Controller
      */
     public function getById(Request $request): View
     {
-        // TODO: Guest (!Auth::check()): trả view trang Tài khoản có form đăng nhập/đăng ký
-        // TODO: đã đăng nhập: $this->userService->getById(Auth::id()) và trả view thông tin cá nhân
+        $user = Auth::user();
+        $orders = collect();
+
+        if ($user) {
+            $orders = $user->orders()
+                ->with('items')
+                ->orderByDesc('created_at')
+                ->get();
+        }
+
+        return view('account.index', [
+            'user' => $user,
+            'orders' => $orders,
+            'hasIntendedCheckout' => str_contains((string) $request->session()->get('url.intended'), '/checkout'),
+        ]);
     }
 
     /**
