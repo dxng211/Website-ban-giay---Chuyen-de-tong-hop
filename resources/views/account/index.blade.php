@@ -40,7 +40,11 @@
                         <button type="submit" class="btn" style="margin-bottom:0;">Lưu thay đổi</button>
                     </form>
                 </div>
-                <div class="col-2" style="padding-left: 30px;">
+                <div class="col-2 checkout-form" style="padding-left: 30px;">
+                    @include('account.partials._password-form')
+
+                    <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
+
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button type="submit" class="btn" style="background:#333;">Đăng Xuất</button>

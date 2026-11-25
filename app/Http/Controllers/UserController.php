@@ -45,14 +45,20 @@ class UserController extends Controller
     public function update(UpdateProfileRequest $request): RedirectResponse
     {
         // TODO: gọi $this->userService->update(Auth::id(), $request->validated()); email không cho đổi (BR2-UC02)
+        $this->userService->update((int) $request->user()->id, $request->validated());
+
+        return redirect()->route('account')->with('success', 'Đã lưu thông tin cá nhân.');
     }
+
 
     /**
      * PUT /account/password
      */
-    public function changePassword(ChangePasswordRequest $request): RedirectResponse
+    public function changePassword(ChangePasswordRequest $request, UserService $userService): RedirectResponse
     {
-        // TODO: gọi $this->userService->changePassword(Auth::id(), mật khẩu cũ, mật khẩu mới)
+        $userService->changePassword($request->user(), $request->string('password')->toString());
+
+        return redirect()->route('account')->with('success', 'Đổi mật khẩu thành công.');
     }
 
     /**

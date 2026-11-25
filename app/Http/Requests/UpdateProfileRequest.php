@@ -12,7 +12,7 @@ class UpdateProfileRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,6 +24,9 @@ class UpdateProfileRequest extends FormRequest
     {
         return [
             //
+            'full_name' => ['required', 'string', 'max:150'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'default_address' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

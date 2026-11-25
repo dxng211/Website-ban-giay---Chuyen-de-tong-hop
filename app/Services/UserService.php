@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * Phụ thuộc: User (Model, truy cập trực tiếp).
@@ -15,6 +16,7 @@ class UserService
     public function getById(int $id): User
     {
         // TODO: User::findOrFail($id)
+        return User::query()->findOrFail($id);
     }
 
     /**
@@ -23,14 +25,25 @@ class UserService
     public function update(int $id, array $data): User
     {
         // TODO: cập nhật hồ sơ và trả về User mới
+        $user = User::query()->findOrFail($id);
+
+        $user->update([
+            'full_name' => $data['full_name'],
+            'phone' => $data['phone'] ?? null,
+            'default_address' => $data['default_address'] ?? null,
+        ]);
+
+        return $user->refresh();
     }
 
     /**
      * Đổi mật khẩu.
      */
-    public function changePassword(int $id, string $currentPassword, string $newPassword): void
+    public function changePassword(User $user, string $newPassword): void
     {
-        // TODO: Hash::check($currentPassword, $user->password); sai -> báo lỗi; đúng -> gán password mới (cast tự mã hóa)
+        $user->update([
+            'password' => Hash::make($newPassword),
+        ]);
     }
 
     /**
