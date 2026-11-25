@@ -35,6 +35,37 @@ class ProductController extends Controller
     {
         // TODO: đọc bộ lọc từ query string: giá (asc/desc), giảm giá, giới tính, size, loại phụ kiện, trang
         // TODO: gọi $this->productService->list($filters); AJAX -> JSON, thường -> view
+        $scope = $request->route('scope');
+        $group = $request->route('group')
+            ?? ($scope === 'admin' ? null : ($request->routeIs('accessories.*') ? 'accessory' : 'shoe'));
+
+        $filters = array_merge(
+            $request->only(['sort', 'gender', 'size', 'category', 'keyword', 'is_active']),
+            [
+                'group' => $group,
+                'scope' => $scope,
+            ]
+        );
+
+        $products = $this->productService->list($filters);
+
+        if ($request->expectsJson()) {
+            return response()->json($products);
+        }
+
+        if ($scope === 'admin') {
+            return view('admin.products.index', compact('products', 'filters'));
+        }
+
+        if ($group === 'accessory') {
+            $accessoryCategories = $this->productService->getAccessoryCategories();
+
+            return view('accessories.index', compact('products', 'filters', 'accessoryCategories'));
+        }
+
+        $sizes = $this->productService->getInStockShoeSizes();
+
+        return view('products.index', compact('products', 'filters', 'sizes'));
     }
 
     /**

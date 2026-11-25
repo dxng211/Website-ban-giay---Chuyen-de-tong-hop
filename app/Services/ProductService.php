@@ -59,6 +59,26 @@ class ProductService
     public function list(array $filters): LengthAwarePaginator
     {
         // TODO: chuyển $filters cho $this->products->list($filters)
+        return $this->products->list($filters);
+    }
+
+    /**
+     * Lấy danh sách size giày đang còn hàng (thêm mới phục vụ bộ lọc trang Giày).
+     */
+    public function getInStockShoeSizes(): array
+    {
+        return $this->products->getInStockShoeSizes();
+    }
+
+    /**
+     * Lấy danh sách danh mục phụ kiện (thêm mới phục vụ bộ lọc trang Phụ kiện).
+     */
+    public function getAccessoryCategories(): Collection
+    {
+        return Category::query()
+            ->where('group_type', 'accessory')
+            ->orderBy('name')
+            ->get();
     }
 
     /**

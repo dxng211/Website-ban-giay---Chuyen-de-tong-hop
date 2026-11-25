@@ -25,6 +25,101 @@ class ProductRepository
     public function list(array $filters): LengthAwarePaginator
     {
         // TODO: dùng scope active, inGroup, onSale, hasSizeInStock; orderByDesc('sold_count')
+        $query = Product::query()
+            ->with([
+                'images' => fn ($q) => $q->orderBy('sort_order')->orderBy('id'),
+                'category',
+            ]);
+
+        // Nếu không phải trang quản trị (scope = admin) thì chỉ lấy sản phẩm đang hiển thị
+        if (($filters['scope'] ?? null) !== 'admin') {
+            $query->where('is_active', true);
+        } elseif (isset($filters['is_active']) && $filters['is_active'] !== '') {
+            $query->where('is_active', (bool) $filters['is_active']);
+        }
+
+        // Lọc theo nhóm danh mục ('shoe' hoặc 'accessory')
+        if (! empty($filters['group'])) {
+            $group = $filters['group'];
+            $query->whereHas('category', fn ($q) => $q->where('group_type', $group));
+        }
+
+        // Lọc theo danh mục cụ thể (id hoặc slug)
+        if (! empty($filters['category'])) {
+            $category = $filters['category'];
+            $query->whereHas('category', function ($q) use ($category) {
+                is_numeric($category)
+                    ? $q->where('id', (int) $category)
+                    : $q->where('slug', $category);
+            });
+        }
+
+        // Tìm kiếm theo tên hoặc SKU (dùng cho Admin)
+        if (! empty($filters['keyword'])) {
+            $kw = trim((string) $filters['keyword']);
+            $query->where(function ($q) use ($kw) {
+                $q->where('name', 'like', "%{$kw}%")
+                  ->orWhere('sku', 'like', "%{$kw}%");
+            });
+        }
+
+        // Lọc theo giới tính (male, female, unisex)
+        if (! empty($filters['gender'])) {
+            $query->where('gender', $filters['gender']);
+        }
+
+        // Lọc theo size còn tồn kho (> 0)
+        if (! empty($filters['size'])) {
+            $size = (string) $filters['size'];
+            $query->whereHas('variants', function ($q) use ($size) {
+                $q->where('size', $size)
+                  ->where('stock_quantity', '>', 0);
+            });
+        }
+
+        // Sắp xếp / lọc giảm giá (mặc định bán chạy nhất lên trước)
+        $sort = $filters['sort'] ?? 'default';
+
+        if ($sort === 'sale') {
+            $query->whereNotNull('sale_price')
+                  ->where('sale_price', '>', 0)
+                  ->whereColumn('sale_price', '<', 'base_price')
+                  ->orderByDesc('sold_count')
+                  ->orderByDesc('id');
+        } elseif ($sort === 'price_asc') {
+            $query->orderByRaw('COALESCE(NULLIF(sale_price, 0), base_price) ASC')
+                  ->orderByDesc('id');
+        } elseif ($sort === 'price_desc') {
+            $query->orderByRaw('COALESCE(NULLIF(sale_price, 0), base_price) DESC')
+                  ->orderByDesc('id');
+        } else {
+            $query->orderByDesc('sold_count')
+                  ->orderByDesc('id');
+        }
+
+        return $query->paginate((int) ($filters['per_page'] ?? 12))->withQueryString();
+    }
+
+    /**
+     * Lấy danh sách các size giày hiện đang còn hàng (stock_quantity > 0) để hiển thị ở bộ lọc.
+     */
+    public function getInStockShoeSizes(): array
+    {
+        $sizes = \App\Models\ProductVariant::query()
+            ->where('stock_quantity', '>', 0)
+            ->whereHas('product', function ($q) {
+                $q->where('is_active', true)
+                  ->whereHas('category', fn ($c) => $c->where('group_type', 'shoe'));
+            })
+            ->distinct()
+            ->pluck('size')
+            ->filter()
+            ->values()
+            ->all();
+
+        natsort($sizes);
+
+        return array_values($sizes);
     }
 
     /**
