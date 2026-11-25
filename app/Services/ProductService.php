@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Repositories\ProductRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -19,9 +20,37 @@ class ProductService
     /**
      * Dữ liệu trang chủ (thêm mới: hàm chưa có trong Class Diagram).
      */
-    public function getHomeData(): array
+    public function getHomeData(int $limit = 4): array
     {
-        // TODO: ['bestSellers' => products->getBestSellers(n), 'newest' => products->getNewest(n)]
+        $baseQuery = Product::query()
+            ->where('is_active', true)
+            ->with([
+                'images' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+                'category',
+            ]);
+
+        $bestSellers = (clone $baseQuery)
+            ->orderByDesc('sold_count')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
+
+        $newestProducts = (clone $baseQuery)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
+
+        $featuredCategories = Category::query()
+            ->orderBy('id')
+            ->limit(3)
+            ->get();
+
+        return [
+            'featuredCategories' => $featuredCategories,
+            'bestSellerProducts' => $bestSellers,
+            'newestProducts' => $newestProducts,
+        ];
     }
 
     /**
