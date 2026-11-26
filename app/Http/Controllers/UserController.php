@@ -10,15 +10,16 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class UserController extends Controller
 {
-    
+
     public function __construct(
         private readonly UserService $userService,
     ) {}
 
-
+    
     public function getById(Request $request): View
     {
         if (!Auth::check()) {
@@ -54,18 +55,63 @@ class UserController extends Controller
 
     public function list(Request $request): View
     {
-        $q = $request->query('q');
+        $q = trim((string) $request->query('q', $request->query('search', '')));
+        $status = trim((string) $request->query('status', ''));
+
         $users = User::query()
-            ->when($q, function ($query, $q) {
-                $query->where(function ($query) use ($q) {
-                    $query->where('name', 'like', "%{$q}%")
-                        ->orWhere('email', 'like', "%{$q}%");
+            ->when($q !== '', function ($query) use ($q) {
+                $searchableCols = array_values(array_filter(
+                    ['full_name', 'name', 'username', 'email', 'phone', 'phone_number'],
+                    fn ($col) => Schema::hasColumn('users', $col)
+                ));
+
+                if (!empty($searchableCols)) {
+                    $query->where(function ($subQuery) use ($searchableCols, $q) {
+                        foreach ($searchableCols as $idx => $col) {
+                            if ($idx === 0) {
+                                $subQuery->where($col, 'like', "%{$q}%");
+                            } else {
+                                $subQuery->orWhere($col, 'like', "%{$q}%");
+                            }
+                        }
+                    });
+                }
+            })
+            ->when($status !== '', function ($query) use ($status) {
+                $isLockedFilter = in_array(strtolower($status), ['locked', 'blocked', 'inactive', 'banned', '0'], true);
+
+                $query->where(function ($subQuery) use ($isLockedFilter) {
+                    if ($isLockedFilter) {
+                        $hasCondition = false;
+                        if (Schema::hasColumn('users', 'is_locked')) {
+                            $subQuery->where('is_locked', 1);
+                            $hasCondition = true;
+                        }
+                        if (Schema::hasColumn('users', 'is_active')) {
+                            $hasCondition ? $subQuery->orWhere('is_active', 0) : $subQuery->where('is_active', 0);
+                            $hasCondition = true;
+                        }
+                        if (Schema::hasColumn('users', 'status')) {
+                            $vals = ['locked', 'blocked', 'inactive', 'banned', '0'];
+                            $hasCondition ? $subQuery->orWhereIn('status', $vals) : $subQuery->whereIn('status', $vals);
+                        }
+                    } else {
+                        if (Schema::hasColumn('users', 'is_locked')) {
+                            $subQuery->where('is_locked', 0);
+                        }
+                        if (Schema::hasColumn('users', 'is_active')) {
+                            $subQuery->where('is_active', 1);
+                        }
+                        if (Schema::hasColumn('users', 'status')) {
+                            $subQuery->whereIn('status', ['active', '1']);
+                        }
+                    }
                 });
             })
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin.users.index', compact('users', 'q'));
+        return view('admin.users.index', compact('users', 'q', 'status'));
     }
 
     public function lockAccount(int $id): RedirectResponse

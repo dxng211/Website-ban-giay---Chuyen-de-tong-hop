@@ -11,13 +11,17 @@
 @endphp
 
 <div class="card">
-    <form method="GET" action="{{ url()->current() }}" class="bar">
+    <form method="GET" action="{{ url()->current() }}" class="bar" style="gap:10px;flex-wrap:wrap">
         <input type="text" name="q" value="{{ $currentSearch }}" placeholder="Tìm theo tên / email...">
         <select name="status" onchange="this.form.submit()">
             <option value="" {{ $currentStatus === '' ? 'selected' : '' }}>Tất cả tài khoản</option>
             <option value="active" {{ $currentStatus === 'active' ? 'selected' : '' }}>Đang hoạt động</option>
             <option value="locked" {{ in_array($currentStatus, ['locked', 'blocked', 'inactive'], true) ? 'selected' : '' }}>Đã khóa</option>
         </select>
+        <button type="submit" class="btn sm">Lọc</button>
+        @if ($currentSearch !== '' || $currentStatus !== '')
+            <a href="{{ url()->current() }}" class="btn sm gray">Xoá bộ lọc</a>
+        @endif
     </form>
 
     <div class="wrap">
