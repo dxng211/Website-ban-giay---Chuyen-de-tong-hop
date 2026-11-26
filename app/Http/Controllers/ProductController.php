@@ -74,6 +74,27 @@ class ProductController extends Controller
     public function getById(int $id): View
     {
         // TODO: gọi $this->productService->getById($id); không thấy -> NotFoundException (404)
+        $product = $this->productService->getById($id);
+
+        $approvedReviewsQuery = $product->reviews()->where('status', \App\Enums\ReviewStatus::Approved);
+
+        $ratingCounts = [
+            0 => (clone $approvedReviewsQuery)->count(),
+            5 => (clone $approvedReviewsQuery)->where('rating', 5)->count(),
+            4 => (clone $approvedReviewsQuery)->where('rating', 4)->count(),
+            3 => (clone $approvedReviewsQuery)->where('rating', 3)->count(),
+            2 => (clone $approvedReviewsQuery)->where('rating', 2)->count(),
+            1 => (clone $approvedReviewsQuery)->where('rating', 1)->count(),
+        ];
+
+        $initialReviews = $product->reviews()
+            ->with('user')
+            ->where('status', \App\Enums\ReviewStatus::Approved)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate(5);
+
+        return view('products.show', compact('product', 'ratingCounts', 'initialReviews'));
     }
 
     /**

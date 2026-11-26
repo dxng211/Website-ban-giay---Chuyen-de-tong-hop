@@ -87,6 +87,15 @@ class ProductService
     public function getById(int $id): Product
     {
         // TODO: $this->products->findWithSizes($id); null -> throw NotFoundException
+        $product = $this->products->findWithSizes($id);
+
+        if (! $product) {
+            throw (new \Illuminate\Database\Eloquent\ModelNotFoundException)->setModel(Product::class, [$id]);
+        }
+
+        $product->setRelation('relatedProducts', $this->products->getRelated($product, 4));
+
+        return $product;
     }
 
     /**
