@@ -38,11 +38,11 @@ Route::patch('/reviews/{id}/status', [ReviewController::class, 'updateStatus'])-
 // Quản lý danh mục (thêm mới)
 Route::get('/categories', [CategoryController::class, 'list'])
     ->defaults('scope', 'admin')->name('categories.index');
-Route::get('/categories/create', [CategoryController::class, 'showCreateForm'])->name('categories.create');
-Route::post('/categories', [CategoryController::class, 'create'])->name('categories.store');
-Route::get('/categories/{id}/edit', [CategoryController::class, 'showEditForm'])->name('categories.edit');
-Route::put('/categories/{id}', [CategoryController::class, 'update'])->name('categories.update');
-Route::delete('/categories/{id}', [CategoryController::class, 'delete'])->name('categories.destroy');
+Route::get('/categories/create', [CategoryController::class, 'showCreateSizeChartForm'])->name('categories.create');
+Route::post('/categories', [CategoryController::class, 'createSizeChart'])->name('categories.store');
+Route::get('/categories/{id}/edit', [CategoryController::class, 'list'])->name('categories.edit');
+Route::put('/categories/{id}', [CategoryController::class, 'updateSizeChart'])->name('categories.update');
+Route::delete('/categories/{id}', [CategoryController::class, 'updateSizeChart'])->name('categories.destroy');
 
 // Quản lý nhóm bảng size: size_chart_groups + các dòng size_charts (thêm mới)
 // Tham số là {key} (chart_key dạng chuỗi như shoe_vn), KHÔNG dùng {id} số: xem Route::pattern('key', ...) trong AppServiceProvider
