@@ -24,5 +24,12 @@ class CategoryService
     public function getSizeChart(string $chartKey): ?SizeChartGroup
     {
         // TODO: SizeChartGroup::with('sizeCharts')->find($chartKey); nên cache vì ít thay đổi
+        return \Illuminate\Support\Facades\Cache::remember(
+            "size_chart_group:{$chartKey}",
+            now()->addHours(12),
+            fn () => SizeChartGroup::with([
+                'sizeCharts' => fn ($q) => $q->orderBy('sort_order')->orderBy('id'),
+            ])->find($chartKey)
+        );
     }
 }
