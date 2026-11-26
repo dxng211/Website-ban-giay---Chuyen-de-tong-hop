@@ -4,21 +4,33 @@
 
 @section('content')
     @guest
-        @if(!empty($hasIntendedCheckout) || request('redirect') === 'checkout')
-            <div class="small-container" id="redirectNotice" style="margin-top: 20px;">
-                <p style="padding: 12px 15px; background: #fff3f1; border: 1px solid #ff523b; border-radius: 6px; color: #ff523b;">
-                    Vui lòng đăng nhập hoặc đăng ký để tiếp tục thanh toán. Giỏ hàng của bạn được giữ lại.
-                </p>
-            </div>
-        @endif
+        @include('account.partials._redirect-notice')
 
         @include('account.partials._auth-forms')
     @else
-        <div class="small-container" style="margin-top: 40px;">
-            <h2>Thông Tin Cá Nhân</h2>
-            <div class="row" style="margin-top: 20px; align-items: flex-start;">
-                <div class="col-2 checkout-form">
-                    <form action="{{ route('account.update') }}" method="POST">
+        <div class="small-container account-dashboard" style="margin-top: 40px; margin-bottom: 60px;">
+            <!-- Thanh tiêu đề + nút Đăng xuất gọn góc phải -->
+            <div class="account-header-bar">
+                <div>
+                    <h2 style="margin: 0;">Tài Khoản Của Tôi</h2>
+                    <p style="font-size: 13px; color: #777; margin-top: 4px;">
+                        Xin chào, <strong>{{ $user->full_name }}</strong> ({{ $user->email }})
+                    </p>
+                </div>
+
+                <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
+                    @csrf
+                    <button type="submit" class="btn-logout-outline">
+                        <i class="fa fa-sign-out"></i> Đăng xuất
+                    </button>
+                </form>
+            </div>
+
+            <!-- 2 thẻ cân chiều cao: Thông tin cá nhân & Đổi mật khẩu -->
+            <div class="account-grid">
+                <div class="account-card checkout-form">
+                    <h3>Thông Tin Cá Nhân</h3>
+                    <form action="{{ route('account.update') }}" method="POST" class="account-card-form">
                         @csrf
                         @method('PUT')
                         <div class="form-group">
@@ -27,33 +39,30 @@
                         </div>
                         <div class="form-group">
                             <label>Email (không thể thay đổi)</label>
-                            <input type="email" value="{{ $user->email }}" readonly style="background:#eee;">
+                            <input type="email" value="{{ $user->email }}" readonly style="background: #f1f1f1; color: #666; cursor: not-allowed;">
                         </div>
                         <div class="form-group">
                             <label>Số điện thoại</label>
-                            <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}">
+                            <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" placeholder="Nhập số điện thoại">
                         </div>
                         <div class="form-group">
                             <label>Địa chỉ mặc định (tự điền khi thanh toán)</label>
-                            <input type="text" name="default_address" value="{{ old('default_address', $user->default_address) }}">
+                            <input type="text" name="default_address" value="{{ old('default_address', $user->default_address) }}" placeholder="Số nhà, đường, quận/huyện, tỉnh/thành">
                         </div>
-                        <button type="submit" class="btn" style="margin-bottom:0;">Lưu thay đổi</button>
+                        <div class="account-card-actions">
+                            <button type="submit" class="btn" style="margin: 0;">Lưu Thay Đổi</button>
+                        </div>
                     </form>
                 </div>
-                <div class="col-2 checkout-form" style="padding-left: 30px;">
+
+                <div class="account-card checkout-form">
                     @include('account.partials._password-form')
-
-                    <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
-
-                    <form action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn" style="background:#333;">Đăng Xuất</button>
-                    </form>
                 </div>
             </div>
 
-            <h2 style="margin-top: 50px;">Đơn Hàng Của Tôi</h2>
-            <div style="margin: 20px 0 40px; overflow-x: auto;">
+            <!-- Danh sách đơn hàng -->
+            <h2 style="margin-top: 45px;">Đơn Hàng Của Tôi</h2>
+            <div style="margin: 18px 0 40px; overflow-x: auto;">
                 <table>
                     <tr>
                         <th>Mã đơn</th>
@@ -89,7 +98,9 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5">Bạn chưa có đơn hàng nào.</td>
+                            <td colspan="5" style="text-align: center; padding: 28px 12px; color: #777;">
+                                Bạn chưa có đơn hàng nào.
+                            </td>
                         </tr>
                     @endforelse
                 </table>
