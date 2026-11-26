@@ -1,0 +1,124 @@
+/* --- SINGLE PRODUCT GALLERY & INFO --- */
+.single-product {
+    margin-top: 30px;
+}
+
+.single-product .col-2 {
+    padding: 20px;
+}
+
+.single-product .col-2 img {
+    padding: 0;
+}
+
+.single-product h4 {
+    margin: 20px 0;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.single-product select {
+    display: block;
+    padding: 10px;
+    margin-top: 20px;
+}
+
+.single-product input {
+    width: 60px;
+    height: 40px;
+    padding-left: 10px;
+    font-size: 18px;
+    margin-right: 10px;
+    border: 1px solid #ff523b;
+}
+
+.single-product .fa {
+    color: #ff523b;
+    margin-left: 6px;
+}
+
+.small-img-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.small-img-col {
+    flex-basis: 24%;
+    cursor: pointer;
+}
+
+/* --- SIZE SELECTOR & STOCK --- */
+.size-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.size-btn {
+    border: 1px solid #ccc;
+    padding: 8px 15px;
+    cursor: pointer;
+    background: #fff;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.size-btn.active {
+    border-color: #ff523b;
+    background: #ff523b;
+    color: #fff;
+}
+
+.size-btn.disabled {
+    background: #eee;
+    color: #aaa;
+    border-color: #ddd;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.stock-info {
+    font-size: 13px;
+    color: #777;
+    margin-bottom: 15px;
+}
+
+.size-guide-btn {
+    color: #ff523b;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-block;
+    margin-bottom: 10px;
+}
+
+/* --- REVIEWS --- */
+.review-section {
+    margin-top: 50px;
+    border-top: 1px solid #ccc;
+    padding-top: 30px;
+}
+
+.review-item {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+@media only screen and (max-width: 600px) {
+    .single-product .row {
+        text-align: left;
+    }
+
+    .single-product .col-2 {
+        padding: 20px 0;
+    }
+
+    .single-product h1 {
+        font-size: 20px;
+        line-height: 32px;
+    }
+}

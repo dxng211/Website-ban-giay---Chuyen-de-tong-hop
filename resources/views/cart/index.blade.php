@@ -2,6 +2,10 @@
 
 @section('title', 'Giỏ Hàng - Hucestore')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/cart-checkout.css') }}">
+@endpush
+
 @section('content')
     @php
         $items = $cart?->items ?? collect();

@@ -2,6 +2,10 @@
 
 @section('title', $product->name . ' - Hucestore')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/product-detail.css') }}">
+@endpush
+
 @section('content')
     <div class="small-container single-product">
         <div class="row">

@@ -2,6 +2,10 @@
 
 @section('title', 'Hucestore | Cửa Hàng Thể Thao & Thời Trang')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/home.css') }}">
+@endpush
+
 @section('content')
     {{-- Banner chính --}}
     @include('home.partials._banner')

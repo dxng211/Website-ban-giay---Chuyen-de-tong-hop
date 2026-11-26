@@ -1,0 +1,211 @@
+/* --- GUEST LOGIN / REGISTER SLIDER --- */
+.account-page {
+    padding: 50px 0;
+}
+
+.form-container {
+    background: #fff;
+    width: 300px;
+    height: 400px;
+    position: relative;
+    text-align: center;
+    padding: 20px 0;
+    margin: auto;
+    box-shadow: 0 0 20px 0px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.form-container span {
+    font-weight: bold;
+    padding: 0 10px;
+    color: #555;
+    cursor: pointer;
+    width: 100px;
+    display: inline-block;
+}
+
+.form-btn {
+    display: inline-block;
+}
+
+.form-container form {
+    max-width: 300px;
+    padding: 0 20px;
+    position: absolute;
+    top: 100px;
+    transition: transform 1s;
+}
+
+.form-container form input {
+    width: 100%;
+    height: 40px;
+    margin: 10px 0;
+    padding: 0 10px;
+    border: 1px solid #ccc;
+}
+
+.form-container form .btn {
+    width: 100%;
+    border: none;
+    cursor: pointer;
+    margin: 10px 0;
+}
+
+.form-container form a {
+    font-size: 12px;
+}
+
+#LoginForm {
+    left: -300px;
+}
+
+#RegForm {
+    left: 0px;
+}
+
+#Indicator {
+    width: 100px;
+    border: none;
+    background: #ff523b;
+    height: 3px;
+    margin-top: 8px;
+    transform: translateX(100px);
+    transition: transform 1s;
+}
+
+/* --- CUSTOMER DASHBOARD --- */
+.account-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding-bottom: 18px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid #eee;
+}
+
+.btn-logout-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 20px;
+    border: 1.5px solid #ff523b;
+    border-radius: 30px;
+    background: #fff;
+    color: #ff523b;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.btn-logout-outline:hover {
+    background: #ff523b;
+    color: #fff;
+}
+
+.account-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 28px;
+    align-items: stretch;
+}
+
+.account-card {
+    background: #fff;
+    border: 1px solid #ececec;
+    border-radius: 10px;
+    padding: 26px 28px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+}
+
+.account-card h3 {
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f2f2f2;
+    font-size: 18px;
+}
+
+.account-card-form,
+.account-card form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.account-card-actions {
+    margin-top: auto;
+    padding-top: 8px;
+}
+
+.account-card .btn {
+    width: auto;
+    min-width: 165px;
+    padding: 10px 26px;
+}
+
+/* --- ORDER HISTORY TABLE --- */
+.account-dashboard table th {
+    text-align: left;
+    padding: 10px;
+    color: #fff;
+    background: #ff523b;
+    font-weight: normal;
+}
+
+.account-dashboard table td {
+    padding: 10px 5px;
+}
+
+.account-dashboard table td:last-child,
+.account-dashboard table th:last-child {
+    text-align: right;
+}
+
+@media (max-width: 768px) {
+    .account-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.account-card .btn {
+    width: auto !important;
+    align-self: flex-start;
+    min-width: 165px;
+    padding: 10px 26px;
+    margin-top: auto;
+}
+
+/* --- ORDER HISTORY TABLE --- */
+.account-dashboard table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.account-dashboard table th {
+    text-align: left;
+    padding: 10px;
+    color: #fff;
+    background: #ff523b;
+    font-weight: normal;
+}
+
+.account-dashboard table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.account-dashboard table td:last-child,
+.account-dashboard table th:last-child {
+    text-align: right;
+}
+
+.account-card .btn {
+    width: auto;
+    align-self: flex-start;
+    min-width: 165px;
+    padding: 10px 26px;
+}
