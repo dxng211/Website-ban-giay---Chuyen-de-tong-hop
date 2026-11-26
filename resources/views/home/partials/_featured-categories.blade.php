@@ -12,7 +12,13 @@
             <div class="row">
                 @foreach($featuredCategories as $index => $category)
                     @php
-                        $catUrl = ($category->group_type ?? 'shoe') === 'accessory'
+                        $rawGroup = $category->group_type ?? null;
+                        $groupValue = is_object($rawGroup) ? ($rawGroup->value ?? null) : $rawGroup;
+                        $isAccessory = $groupValue
+                            ? $groupValue === 'accessory'
+                            : ($category->slug !== 'giay');
+
+                        $catUrl = $isAccessory
                             ? route('accessories.index', ['category' => $category->slug])
                             : route('products.index', ['category' => $category->slug]);
 
