@@ -16,6 +16,22 @@ class CartRepository
     public function findByUserOrSession(?int $userId, ?string $guestToken): ?Cart
     {
         // TODO: Cart::with('items.variant.product.images')->...
+        if (! $userId && ! $guestToken) {
+            return null;
+        }
+
+        $query = Cart::query()->with([
+            'items' => fn ($q) => $q->orderBy('id'),
+            'items.variant.product.images' => fn ($q) => $q->orderBy('sort_order')->orderBy('id'),
+        ]);
+
+        if ($userId) {
+            return $query->where('user_id', $userId)->first();
+        }
+
+        return $query->whereNull('user_id')
+            ->where('session_token', $guestToken)
+            ->first();
     }
 
     /**
@@ -24,6 +40,10 @@ class CartRepository
     public function saveItem(Cart $cart, int $variantId, int $quantity): CartItem
     {
         // TODO: updateOrCreate
+        return $cart->items()->updateOrCreate(
+            ['product_variant_id' => $variantId],
+            ['quantity' => $quantity]
+        );
     }
 
     /**
@@ -32,6 +52,7 @@ class CartRepository
     public function removeItem(Cart $cart, int $itemId): void
     {
         // TODO: viết truy vấn
+        $cart->items()->whereKey($itemId)->delete();
     }
 
     /**
@@ -40,6 +61,11 @@ class CartRepository
     public function clearCart(int $userId): void
     {
         // TODO: viết truy vấn
+        $cart = Cart::where('user_id', $userId)->first();
+
+        if ($cart) {
+            $cart->items()->delete();
+        }
     }
 
     /**
@@ -48,6 +74,10 @@ class CartRepository
     public function createCart(?int $userId, ?string $guestToken): Cart
     {
         // TODO: Cart::create(...)
+        return Cart::create([
+            'user_id' => $userId,
+            'session_token' => $userId ? null : $guestToken,
+        ]);
     }
 
     /**
@@ -56,5 +86,7 @@ class CartRepository
     public function deleteCart(Cart $cart): void
     {
         // TODO: $cart->delete()
+        $cart->items()->delete();
+        $cart->delete();
     }
 }

@@ -38,7 +38,7 @@ class AuthService
         });
 
         Auth::login($user);
-        $this->mergeGuestCartToUser($user->id, $guestToken);
+        $this->cartService->mergeCart($user->id, $guestToken);
 
         return $user;
     }
@@ -63,7 +63,7 @@ class AuthService
         }
 
         Auth::login($user);
-        $this->mergeGuestCartToUser($user->id, $guestToken);
+        $this->cartService->mergeCart($user->id, $guestToken);
 
         return $user;
     }
@@ -74,6 +74,7 @@ class AuthService
     public function logout(): void
     {
         // TODO: Auth::logout()
+        Auth::logout();
     }
 
     public function mergeGuestCartToUser(int $userId, ?string $guestToken): void

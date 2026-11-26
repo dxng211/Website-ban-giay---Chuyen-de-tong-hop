@@ -17,6 +17,14 @@ class ProductRepository
     public function findWithSizes(int $id): ?Product
     {
         // TODO: Product::with(['images', 'variants'])->find($id)
+        return Product::query()
+            ->where('is_active', true)
+            ->with([
+                'category.sizeChartGroup',
+                'images' => fn ($q) => $q->orderBy('sort_order')->orderBy('id'),
+                'variants' => fn ($q) => $q->orderBy('id'),
+            ])
+            ->find($id);
     }
 
     /**
@@ -136,6 +144,7 @@ class ProductRepository
     public function checkStock(int $variantId): int
     {
         // TODO: ProductVariant::whereKey($variantId)->value('stock_quantity')
+        return (int) (\App\Models\ProductVariant::whereKey($variantId)->value('stock_quantity') ?? 0);
     }
 
     /**
@@ -184,6 +193,18 @@ class ProductRepository
     public function getRelated(Product $product, int $limit = 4): Collection
     {
         // TODO: viết truy vấn
+        return Product::query()
+            ->where('is_active', true)
+            ->where('category_id', $product->category_id)
+            ->whereKeyNot($product->id)
+            ->with([
+                'images' => fn ($q) => $q->orderBy('sort_order')->orderBy('id'),
+                'category',
+            ])
+            ->orderByDesc('sold_count')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
     }
 
     /**
