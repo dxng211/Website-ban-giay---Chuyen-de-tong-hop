@@ -13,8 +13,27 @@ class EnsureUserHasRole
      *
      * @param  Closure(Request): (Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, string ...$roles): Response
     {
+        $user = $request->user();
+
+        if (!$user) {
+            return redirect()->route('admin.login');
+        }
+
+        if (empty($roles)) {
+            return $next($request);
+        }
+
+        $userRole = $user->role instanceof \BackedEnum
+            ? (string) $user->role->value
+            : (string) ($user->role ?? '');
+
+        if (!in_array($userRole, $roles, true)) {
+            abort(403, 'Bạn không có quyền truy cập khu vực quản trị.');
+        }
+
         return $next($request);
+    
     }
 }

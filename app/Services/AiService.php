@@ -2,10 +2,14 @@
 
 namespace App\Services;
 
+use App\Exceptions\AiServiceException;
+use App\Models\ChatbotLog;
+use App\Models\SizeChart;
 use App\Models\User;
 use App\Repositories\ProductRepository;
 use App\Services\Clients\AiApiClient;
 use Illuminate\Support\Collection;
+use Throwable;
 
 /**
  * Phụ thuộc: AiApiClient, ProductRepository, SizeChart và ChatbotLog (Model, truy cập trực tiếp).
@@ -23,11 +27,109 @@ class AiService
      */
     public function suggest(array $data, ?User $user, string $sessionToken): array
     {
-        // TODO: tra size: SizeChart::where('chart_key', 'shoe_vn')->coveringValue($footLength)->first(); không có -> trả Notice (chân ngoài bảng)
-        // TODO: $this->products->getProductsBySizeAndPrice(size, giá min, giá max); rỗng -> trả size kèm Notice (không gọi Gemini)
-        // TODO: $this->aiClient->generateProductSuggestionJson(need, ứng viên); lỗi -> throw AiServiceException
-        // TODO: kiểm tra id Gemini chọn thuộc danh sách ứng viên (loại id lạ); ChatbotLog::create(...) ghi lịch sử
-        // TODO: return ['suggested_size' => ..., 'products' => ..., 'ai_reply' => ...]
+        $footLength = (float) ($data['foot_length'] ?? $data['foot_length_cm'] ?? 0);
+        $minPrice = isset($data['min_price']) && $data['min_price'] !== '' ? (int) $data['min_price'] : null;
+        $maxPrice = isset($data['max_price']) && $data['max_price'] !== '' ? (int) $data['max_price'] : null;
+        $need = (string) ($data['need'] ?? $data['note'] ?? '');
+
+        $chart = SizeChart::query()
+            ->where('chart_key', 'shoe_vn')
+            ->coveringValue($footLength)
+            ->first();
+
+        if (!$chart) {
+            $notice = 'Chiều dài chân nằm ngoài bảng quy đổi kích cỡ hiện tại.';
+
+            ChatbotLog::create([
+                'user_id' => $user?->id,
+                'session_token' => $sessionToken,
+                'foot_length' => $footLength,
+                'suggested_size' => null,
+                'notice' => $notice,
+                'ai_reply' => $notice,
+                'recommended_product_ids' => [],
+            ]);
+
+            return [
+                'suggested_size' => null,
+                'products' => collect(),
+                'ai_reply' => $notice,
+                'notice' => $notice,
+            ];
+        }
+
+        $suggestedSize = (string) ($chart->size_label ?? $chart->size ?? '');
+        $candidates = $this->products->getProductsBySizeAndPrice($suggestedSize, $minPrice, $maxPrice);
+
+        if ($candidates->isEmpty()) {
+            $notice = "Gợi ý size {$suggestedSize}, nhưng hiện chưa có sản phẩm phù hợp với khoảng giá này.";
+
+            ChatbotLog::create([
+                'user_id' => $user?->id,
+                'session_token' => $sessionToken,
+                'foot_length' => $footLength,
+                'suggested_size' => $suggestedSize,
+                'notice' => $notice,
+                'ai_reply' => $notice,
+                'recommended_product_ids' => [],
+            ]);
+
+            return [
+                'suggested_size' => $suggestedSize,
+                'products' => collect(),
+                'ai_reply' => $notice,
+                'notice' => $notice,
+            ];
+        }
+
+        $candidateList = $candidates->values();
+        $allowedIds = $candidateList->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        try {
+            $aiResult = $this->aiClient->generateProductSuggestionJson($need, $candidateList->all());
+        } catch (Throwable $e) {
+            throw new AiServiceException('Lỗi khi gọi dịch vụ tư vấn AI: ' . $e->getMessage(), 0, $e);
+        }
+
+        $rawIds = $aiResult['product_ids'] ?? $aiResult['recommended_product_ids'] ?? [];
+        if (!is_array($rawIds)) {
+            $rawIds = [];
+        }
+
+        $selectedIds = [];
+        foreach ($rawIds as $id) {
+            $intId = (int) $id;
+            if (in_array($intId, $allowedIds, true) && !in_array($intId, $selectedIds, true)) {
+                $selectedIds[] = $intId;
+            }
+            if (count($selectedIds) >= 3) {
+                break;
+            }
+        }
+
+        if (empty($selectedIds)) {
+            $selectedIds = array_slice($allowedIds, 0, min(3, count($allowedIds)));
+        }
+
+        $recommendedProducts = $candidateList->whereIn('id', $selectedIds)->values();
+        $aiReply = (string) ($aiResult['reply'] ?? $aiResult['ai_reply'] ?? "Gợi ý size {$suggestedSize} phù hợp với chiều dài chân của bạn.");
+
+        ChatbotLog::create([
+            'user_id' => $user?->id,
+            'session_token' => $sessionToken,
+            'foot_length' => $footLength,
+            'suggested_size' => $suggestedSize,
+            'notice' => null,
+            'ai_reply' => $aiReply,
+            'recommended_product_ids' => $selectedIds,
+        ]);
+
+        return [
+            'suggested_size' => $suggestedSize,
+            'products' => $recommendedProducts,
+            'ai_reply' => $aiReply,
+            'notice' => null,
+        ];
     }
 
     /**
@@ -35,6 +137,13 @@ class AiService
      */
     public function listMine(?User $user, string $sessionToken): Collection
     {
-        // TODO: ChatbotLog::where(...)->latest()->get()
+        return ChatbotLog::query()
+            ->when(
+                $user !== null,
+                fn ($q) => $q->where('user_id', $user->id),
+                fn ($q) => $q->where('session_token', $sessionToken)
+            )
+            ->latest()
+            ->get();
     }
 }

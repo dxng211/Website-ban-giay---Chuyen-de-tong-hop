@@ -16,27 +16,45 @@ class StatisticsService
         private readonly ProductRepository $products,
     ) {}
 
-    /**
-     * Tổng doanh thu.
-     */
+
     public function getRevenue(): int
     {
-        // TODO: return $this->orders->sumRevenue()
+        return (int) $this->orders->sumRevenue();
     }
 
-    /**
-     * Tổng số đơn hàng.
-     */
+
     public function getOrderCount(): int
     {
-        // TODO: return $this->orders->countOrder()
+        return (int) $this->orders->countOrder();
     }
 
-    /**
-     * Danh sách sản phẩm bán chạy nhất.
-     */
+
     public function getBestSellers(int $limit = 5): Collection
     {
-        // TODO: return $this->products->getBestSellers($limit)
+        return $this->products->getBestSellers($limit);
+    }
+
+    public function getPendingOrderCount(): int
+    {
+        return (int) ($this->orders->countGroupByStatus()['pending'] ?? 0);
+    }
+
+    public function getOrderCountByStatus(): array
+    {
+        return $this->orders->countGroupByStatus();
+    }
+
+    public function getLowStockProducts(int $threshold = 5)
+    {
+        if (method_exists($this->products, 'getLowStockProducts')) {
+            return call_user_func([$this->products, 'getLowStockProducts'], $threshold);
+        }
+
+        return collect();
+    }
+
+    public function getRecentOrders(int $limit = 10)
+    {
+        return $this->orders->getRecent($limit);
     }
 }

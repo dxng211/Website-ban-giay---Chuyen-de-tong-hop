@@ -4,56 +4,82 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\UpdateProfileRequest;
+use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    //
+    
     public function __construct(
         private readonly UserService $userService,
     ) {}
 
-    /**
-     * GET /account (route công khai)
-     */
+
     public function getById(Request $request): View
     {
-        // TODO: Guest (!Auth::check()): trả view trang Tài khoản có form đăng nhập/đăng ký
-        // TODO: đã đăng nhập: $this->userService->getById(Auth::id()) và trả view thông tin cá nhân
+        if (!Auth::check()) {
+            return view('account.index');
+        }
+
+        $data = ['user' => Auth::user()];
+
+        return view('account.index', $data);
     }
 
-    /**
-     * PUT /account
-     */
     public function update(UpdateProfileRequest $request): RedirectResponse
     {
-        // TODO: gọi $this->userService->update(Auth::id(), $request->validated()); email không cho đổi (BR2-UC02)
+        $data = $request->validated();
+        unset($data['email']);
+
+        $this->userService->update(Auth::id(), $data);
+
+        return back()->with('success', 'Cập nhật thông tin cá nhân thành công.');
     }
 
-    /**
-     * PUT /account/password
-     */
+
     public function changePassword(ChangePasswordRequest $request): RedirectResponse
     {
-        // TODO: gọi $this->userService->changePassword(Auth::id(), mật khẩu cũ, mật khẩu mới)
+        $validated = $request->validated();
+        $currentPassword = $validated['current_password'] ?? $request->input('current_password');
+        $newPassword = $validated['new_password'] ?? $validated['password'] ?? $request->input('new_password');
+
+        $this->userService->changePassword(Auth::id(), $currentPassword, $newPassword);
+
+        return back()->with('success', 'Đổi mật khẩu thành công.');
     }
 
-    /**
-     * PATCH /admin/users/{id}/lock
-     */
+    public function list(Request $request): View
+    {
+        $q = $request->query('q');
+        $users = User::query()
+            ->when($q, function ($query, $q) {
+                $query->where(function ($query) use ($q) {
+                    $query->where('name', 'like', "%{$q}%")
+                        ->orWhere('email', 'like', "%{$q}%");
+                });
+            })
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.users.index', compact('users', 'q'));
+    }
+
     public function lockAccount(int $id): RedirectResponse
     {
-        // TODO: gọi $this->userService->lockAccount($id)
+        $this->userService->lockAccount($id);
+
+        return back()->with('success', 'Đã khóa tài khoản người dùng.');
     }
 
-    /**
-     * PATCH /admin/users/{id}/unlock
-     */
+
     public function unlockAccount(int $id): RedirectResponse
     {
-        // TODO: gọi $this->userService->unlockAccount($id)
+        $this->userService->unlockAccount($id);
+
+        return back()->with('success', 'Đã mở khóa tài khoản người dùng.');
     }
 }

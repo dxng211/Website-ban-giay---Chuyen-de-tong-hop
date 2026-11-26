@@ -56,7 +56,11 @@ class User extends Authenticatable
     }
     public function isAdmin(): bool
     {
-        return $this->role === Role::Admin;
+        $role = $this->role instanceof \BackedEnum
+        ? (string) $this->role->value
+        : (string) ($this->role ?? '');
+
+    return $role === 'admin';
     }
 
     public function cart(): HasOne

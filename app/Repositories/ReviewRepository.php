@@ -30,9 +30,35 @@ class ReviewRepository
     /**
      * Danh sách cho Admin, lọc theo trạng thái - thêm mới: hàm chưa có trong Class Diagram.
      */
+    /**
+     * Danh sách cho Admin, lọc theo trạng thái - thêm mới: hàm chưa có trong Class Diagram.
+     */
     public function list(?ReviewStatus $status = null, int $perPage = 15): LengthAwarePaginator
     {
-        // TODO: viết truy vấn
+        $query = \App\Models\Review::query();
+
+        $relations = [];
+        if (method_exists(\App\Models\Review::class, 'user')) {
+            $relations[] = 'user';
+        }
+        if (method_exists(\App\Models\Review::class, 'product')) {
+            $relations[] = 'product';
+        }
+        if (!empty($relations)) {
+            $query->with($relations);
+        }
+
+        if ($status !== null) {
+            $column = \Illuminate\Support\Facades\Schema::hasColumn('reviews', 'status')
+                ? 'status'
+                : (\Illuminate\Support\Facades\Schema::hasColumn('reviews', 'review_status') ? 'review_status' : 'status');
+
+            $query->where($column, $status->value ?? $status);
+        }
+
+        $perPage = $perPage > 0 ? min($perPage, 100) : 15;
+
+        return $query->latest('id')->paginate($perPage)->withQueryString();
     }
 
     /**

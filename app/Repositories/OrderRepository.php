@@ -63,9 +63,51 @@ class OrderRepository
     /**
      * Danh sách đơn: theo user (Customer) hoặc tất cả (Admin), có lọc trạng thái, phân trang.
      */
-    public function list(?int $userId, array $filters = []): LengthAwarePaginator
+    /**
+     * Danh sách đơn: theo user (Customer) hoặc tất cả (Admin), có lọc trạng thái, phân trang.
+     */
+    public function list(?int $userId, array $filters = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        // TODO: viết truy vấn
+        $query = \App\Models\Order::query();
+
+        if ($userId !== null) {
+            $query->where('user_id', $userId);
+        }
+
+        $status = $filters['status'] ?? $filters['order_status'] ?? null;
+        if (!empty($status)) {
+            $query->where('order_status', $status);
+        }
+
+        $paymentStatus = $filters['payment_status'] ?? null;
+        if (!empty($paymentStatus) && \Illuminate\Support\Facades\Schema::hasColumn('orders', 'payment_status')) {
+            $query->where('payment_status', $paymentStatus);
+        }
+
+        $search = trim((string) ($filters['q'] ?? $filters['search'] ?? ''));
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('orders', 'order_code')) {
+                    $q->where('order_code', 'like', "%{$search}%");
+                } elseif (\Illuminate\Support\Facades\Schema::hasColumn('orders', 'code')) {
+                    $q->where('code', 'like', "%{$search}%");
+                } else {
+                    $q->where('id', $search);
+                }
+
+                if (\Illuminate\Support\Facades\Schema::hasColumn('orders', 'customer_name')) {
+                    $q->orWhere('customer_name', 'like', "%{$search}%");
+                }
+                if (\Illuminate\Support\Facades\Schema::hasColumn('orders', 'recipient_name')) {
+                    $q->orWhere('recipient_name', 'like', "%{$search}%");
+                }
+            });
+        }
+
+        $perPage = (int) ($filters['per_page'] ?? 15);
+        $perPage = $perPage > 0 ? min($perPage, 100) : 15;
+
+        return $query->latest('id')->paginate($perPage)->withQueryString();
     }
 
     /**
@@ -73,7 +115,18 @@ class OrderRepository
      */
     public function sumRevenue(): int
     {
-        // TODO: viết truy vấn
+        $query = \App\Models\Order::query()->where(function ($q) {
+            $q->where('order_status', 'completed');
+            if (class_exists(\App\Enums\OrderStatus::class) && defined('\App\Enums\OrderStatus::Completed')) {
+                $q->orWhere('order_status', \App\Enums\OrderStatus::Completed->value);
+            }
+        });
+
+        $column = \Illuminate\Support\Facades\Schema::hasColumn('orders', 'total_amount')
+            ? 'total_amount'
+            : (\Illuminate\Support\Facades\Schema::hasColumn('orders', 'total') ? 'total' : 'total_amount');
+
+        return (int) $query->sum($column);
     }
 
     /**
@@ -81,6 +134,38 @@ class OrderRepository
      */
     public function countOrder(): int
     {
-        // TODO: viết truy vấn
+        return (int) \App\Models\Order::query()->count();
+    }
+
+    /**
+     * Đếm số đơn theo từng trạng thái (trả về mảng ['pending' => ..., ...]).
+     */
+    public function countGroupByStatus(): array
+    {
+        $rows = \App\Models\Order::query()
+            ->selectRaw('order_status, COUNT(*) as total')
+            ->groupBy('order_status')
+            ->get();
+
+        $result = [];
+        foreach ($rows as $row) {
+            $status = $row->order_status instanceof \BackedEnum
+                ? (string) $row->order_status->value
+                : (string) ($row->order_status ?? '');
+            $result[$status] = (int) $row->total;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Danh sách đơn hàng gần nhất.
+     */
+    public function getRecent(int $limit = 10)
+    {
+        return \App\Models\Order::query()
+            ->latest()
+            ->limit($limit)
+            ->get();
     }
 }

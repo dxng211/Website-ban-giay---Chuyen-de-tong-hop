@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Repositories\OrderRepository;
 use App\Repositories\ReviewRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Phụ thuộc: ReviewRepository, OrderRepository.
@@ -24,8 +25,21 @@ class ReviewService
      */
     public function create(User $user, array $data): Review
     {
-        // TODO: $this->orders->hasPurchased($user->id, $data['product_id']); chưa mua -> lỗi nghiệp vụ
-        // TODO: $this->reviews->save(...)
+        $productId = (int) $data['product_id'];
+
+        if (!$this->orders->hasPurchased($user->id, $productId)) {
+            throw ValidationException::withMessages([
+                'product_id' => 'Bạn chỉ có thể đánh giá sản phẩm sau khi đơn hàng đã hoàn thành.',
+            ]);
+        }
+
+        return $this->reviews->save([
+            'user_id' => $user->id,
+            'product_id' => $productId,
+            'rating' => (int) $data['rating'],
+            'comment' => $data['comment'] ?? null,
+            'status' => ReviewStatus::Pending,
+        ]);
     }
 
     /**
@@ -33,7 +47,7 @@ class ReviewService
      */
     public function listByProduct(int $productId, ?int $rating = null, int $perPage = 5): LengthAwarePaginator
     {
-        // TODO: $this->reviews->listByProduct(...)
+        return $this->reviews->listByProduct($productId, $rating, $perPage);
     }
 
     /**
@@ -41,7 +55,7 @@ class ReviewService
      */
     public function list(?ReviewStatus $status = null, int $perPage = 15): LengthAwarePaginator
     {
-        // TODO: $this->reviews->list(...)
+        return $this->reviews->list($status, $perPage);
     }
 
     /**
@@ -49,6 +63,6 @@ class ReviewService
      */
     public function updateStatus(int $id, ReviewStatus $status): Review
     {
-        // TODO: $this->reviews->updateStatus($id, $status)
+        return $this->reviews->updateStatus($id, $status);
     }
 }

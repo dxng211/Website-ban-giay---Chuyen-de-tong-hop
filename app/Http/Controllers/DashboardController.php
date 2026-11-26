@@ -2,47 +2,54 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+
 use App\Services\StatisticsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 
 class DashboardController extends Controller
 {
-    //
+
     public function __construct(
         private readonly StatisticsService $statisticsService,
     ) {}
 
-    /**
-     * GET /admin/dashboard (thêm mới: hàm chưa có trong Class Diagram)
-     */
+    
     public function index(): View
     {
-        // TODO: gọi getRevenue, getOrderCount, getBestSellers của StatisticsService rồi trả view thống kê
+        $revenue = $this->statisticsService->getRevenue();
+        $orderCount = $this->statisticsService->getOrderCount();
+        $pendingOrdersCount = $this->statisticsService->getPendingOrderCount();
+        $ordersByStatus = $this->statisticsService->getOrderCountByStatus();
+        $lowStockProducts = $this->statisticsService->getLowStockProducts();
+        $bestSellers = $this->statisticsService->getBestSellers();
+        $recentOrders = $this->statisticsService->getRecentOrders();
+
+        return view('admin.dashboard.index', compact(
+            'revenue',
+            'orderCount',
+            'pendingOrdersCount',
+            'ordersByStatus',
+            'lowStockProducts',
+            'bestSellers',
+            'recentOrders'
+        ));
     }
 
-    /**
-     * JSON endpoint cho từng ô thống kê (dùng khi giao diện nạp bằng AJAX)
-     */
     public function getRevenue(): JsonResponse
     {
-        // TODO: trả $this->statisticsService->getRevenue()
+        return response()->json(['data' => $this->statisticsService->getRevenue()]);
     }
 
-    /**
-     * JSON endpoint
-     */
+
     public function getOrderCount(): JsonResponse
     {
-        // TODO: trả $this->statisticsService->getOrderCount()
+        return response()->json(['data' => $this->statisticsService->getOrderCount()]);
     }
 
-    /**
-     * JSON endpoint
-     */
+
     public function getBestSellers(): JsonResponse
     {
-        // TODO: trả $this->statisticsService->getBestSellers()
+        return response()->json(['data' => $this->statisticsService->getBestSellers()]);
     }
 }

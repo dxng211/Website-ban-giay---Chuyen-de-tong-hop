@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\PaymentStatus;
+use App\Exceptions\PaymentException;
 use App\Models\Order;
 use App\Repositories\OrderRepository;
 use App\Services\Clients\VietQrClient;
+use Throwable;
 
 /**
  * Phụ thuộc: VietQrClient, OrderRepository.
@@ -21,8 +24,16 @@ class PaymentService
      */
     public function getQr(Order|int $order): string
     {
-        // TODO: nếu là id -> $this->orders->findById(); lỗi sinh QR -> throw PaymentException
-        // TODO: return $this->vietQr->generateQrUrl($order->total_amount, $order->order_code)
+        try {
+            $targetOrder = $order instanceof Order ? $order : $this->orders->findById($order);
+
+            return (string) $this->vietQr->generateQrUrl(
+                (int) $targetOrder->total_amount,
+                (string) $targetOrder->order_code
+            );
+        } catch (Throwable $e) {
+            throw new PaymentException('Không thể tạo mã QR thanh toán: ' . $e->getMessage(), 0, $e);
+        }
     }
 
     /**
@@ -30,6 +41,6 @@ class PaymentService
      */
     public function confirmPayment(int $orderId): Order
     {
-        // TODO: $this->orders->updatePaymentStatus($orderId, PaymentStatus::Paid)
+        return $this->orders->updatePaymentStatus($orderId, PaymentStatus::Paid);
     }
 }
