@@ -17,6 +17,7 @@ class ReviewRepository
     public function save(array $data): Review
     {
         // TODO: Review::create($data)
+        return Review::create($data);
     }
 
     /**
@@ -25,6 +26,14 @@ class ReviewRepository
     public function listByProduct(int $productId, ?int $rating = null, int $perPage = 5): LengthAwarePaginator
     {
         // TODO: Review::approved()->...
+        return Review::query()
+            ->with('user')
+            ->where('product_id', $productId)
+            ->where('status', ReviewStatus::Approved)
+            ->when($rating && $rating >= 1 && $rating <= 5, fn ($q) => $q->where('rating', $rating))
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate($perPage);
     }
 
     /**

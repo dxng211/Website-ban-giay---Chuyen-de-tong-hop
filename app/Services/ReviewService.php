@@ -26,6 +26,20 @@ class ReviewService
     {
         // TODO: $this->orders->hasPurchased($user->id, $data['product_id']); chưa mua -> lỗi nghiệp vụ
         // TODO: $this->reviews->save(...)
+        $productId = (int) $data['product_id'];
+
+        if (! $this->orders->hasPurchased($user->id, $productId)) {
+            throw new \DomainException('Cần mua sản phẩm trước khi đánh giá.');
+        }
+
+        return $this->reviews->save([
+            'product_id' => $productId,
+            'user_id' => $user->id,
+            'order_id' => $data['order_id'] ?? null,
+            'rating' => (int) $data['rating'],
+            'comment' => trim((string) $data['comment']),
+            'status' => ReviewStatus::Pending,
+        ]);
     }
 
     /**
@@ -34,6 +48,7 @@ class ReviewService
     public function listByProduct(int $productId, ?int $rating = null, int $perPage = 5): LengthAwarePaginator
     {
         // TODO: $this->reviews->listByProduct(...)
+        return $this->reviews->listByProduct($productId, $rating, $perPage);
     }
 
     /**

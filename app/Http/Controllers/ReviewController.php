@@ -21,6 +21,17 @@ class ReviewController extends Controller
     public function create(ReviewRequest $request): JsonResponse
     {
         // TODO: gọi $this->reviewService->create(Auth::user(), $request->validated()); chưa mua hàng -> lỗi nghiệp vụ
+        try {
+            $this->reviewService->create($request->user(), $request->validated());
+
+            return response()->json([
+                'message' => 'Đã gửi đánh giá thành công, đang chờ quản trị viên kiểm duyệt.',
+            ], 201);
+        } catch (\DomainException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
+        }
     }
 
     /**
@@ -29,6 +40,20 @@ class ReviewController extends Controller
     public function listByProduct(Request $request, int $id): JsonResponse
     {
         // TODO: đọc ?rating= và ?page=; chỉ trả đánh giá đã duyệt, mới nhất trước
+        $rating = (int) $request->query('rating', 0);
+        $reviews = $this->reviewService->listByProduct($id, $rating > 0 ? $rating : null, 5);
+
+        $html = view('products.partials._review-list', [
+            'reviews' => $reviews,
+            'isAppend' => $reviews->currentPage() > 1,
+        ])->render();
+
+        return response()->json([
+            'html' => $html,
+            'has_more' => $reviews->hasMorePages(),
+            'next_page' => $reviews->currentPage() + 1,
+            'total' => $reviews->total(),
+        ]);
     }
 
     /**

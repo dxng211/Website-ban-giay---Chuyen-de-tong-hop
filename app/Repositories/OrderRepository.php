@@ -58,6 +58,17 @@ class OrderRepository
     public function hasPurchased(int $userId, int $productId): bool
     {
         // TODO: viết truy vấn
+        return Order::query()
+            ->where('user_id', $userId)
+            ->where('order_status', OrderStatus::Completed)
+            ->whereExists(function ($query) use ($productId) {
+                $query->selectRaw('1')
+                    ->from('order_items')
+                    ->join('product_variants', 'product_variants.id', '=', 'order_items.product_variant_id')
+                    ->whereColumn('order_items.order_id', 'orders.id')
+                    ->where('product_variants.product_id', $productId);
+            })
+            ->exists();
     }
 
     /**
