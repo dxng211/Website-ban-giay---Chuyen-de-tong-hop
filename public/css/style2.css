@@ -895,3 +895,41 @@ nav[aria-label="Pagination Navigation"] svg {
 .categories .col-3 a:hover img {
     transform: scale(1.04);
 }
+
+/* ===== Cố định chiều cao thẻ sản phẩm & hiệu ứng chạy tên dài khi hover ===== */
+.small-container .row {
+    align-items: flex-start;
+}
+
+.col-4 {
+    overflow: hidden;
+}
+
+.col-4 > a:nth-of-type(2) {
+    display: block;
+    overflow: hidden;
+    margin-top: 6px;
+}
+
+.col-4 h4 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.col-4.has-long-title:hover h4 {
+    overflow: visible;
+    text-overflow: clip;
+    animation: productTitleMarquee var(--marquee-duration, 4s) linear infinite alternate;
+}
+
+@keyframes productTitleMarquee {
+    0%, 15% {
+        transform: translateX(0);
+    }
+    85%, 100% {
+        transform: translateX(var(--marquee-offset, 0px));
+    }
+}

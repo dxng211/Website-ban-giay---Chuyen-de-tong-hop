@@ -71,6 +71,27 @@
             const modal = document.getElementById('sizeGuideModal');
             if (modal) modal.style.display = 'none';
         };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            function initProductTitleMarquee() {
+                document.querySelectorAll('.col-4').forEach(function (card) {
+                    const title = card.querySelector('h4');
+                    if (!title) return;
+
+                    const overflow = title.scrollWidth - title.clientWidth;
+                    if (overflow > 2) {
+                        card.classList.add('has-long-title');
+                        title.style.setProperty('--marquee-offset', '-' + (overflow + 8) + 'px');
+                        title.style.setProperty('--marquee-duration', Math.max(2.5, overflow / 35).toFixed(2) + 's');
+                    } else {
+                        card.classList.remove('has-long-title');
+                    }
+                });
+            }
+
+            initProductTitleMarquee();
+            window.addEventListener('resize', initProductTitleMarquee);
+        });
     </script>
 </body>
 </html>
